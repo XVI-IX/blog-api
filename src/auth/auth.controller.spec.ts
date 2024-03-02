@@ -14,6 +14,18 @@ describe('AuthController', () => {
         statusCode: 201,
       };
     }),
+    verifyAccount: jest.fn((dto) => {
+      return {
+        message: 'account verified',
+        status: 'success',
+        statusCode: 200,
+        data: {
+          id: 4,
+          username: 'JohnDoe123',
+          verified: true,
+        },
+      };
+    }),
   };
 
   beforeEach(async () => {
@@ -46,6 +58,24 @@ describe('AuthController', () => {
       ),
       status: expect.stringMatching('success'),
       statusCode: expect.any(Number),
+    });
+  });
+
+  it('should verify a user', () => {
+    expect(
+      controller.verifyAccount({
+        token: '92929',
+        email: 'testemail@example.com',
+      }),
+    ).toEqual({
+      message: expect.stringMatching('account verified'),
+      status: expect.stringMatching('success'),
+      statusCode: expect.any(Number),
+      data: {
+        id: 4,
+        username: 'JohnDoe123',
+        verified: true,
+      },
     });
   });
 });
