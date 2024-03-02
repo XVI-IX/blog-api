@@ -12,6 +12,11 @@ describe('AuthService', () => {
     service = module.get<AuthService>(AuthService);
   });
 
+  const mockJwtService = {
+    signAsync: jest.fn(),
+    verifyAsync: jest.fn(),
+  };
+
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
