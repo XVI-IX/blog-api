@@ -65,10 +65,12 @@ export class AuthService {
     try {
       const user = await this.pg.getUser(dto.email);
 
+      console.log(user);
+
       if (!user.verified) {
         const verificationToken = randomBytes(3).toString('hex');
         const query =
-          'UPDATE Users SET vertoken = $1, updated_at = NOW() WHERE id = &2';
+          'UPDATE Users SET vertoken = $1, updated_at = NOW() WHERE id = $2 RETURNING *';
         const values = [verificationToken, user.id];
 
         await this.pg.query(query, values);
