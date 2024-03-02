@@ -4,11 +4,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Pool } from 'pg';
-import { CreateUserDto } from 'src/auth/dto';
-import { config } from 'src/common/config/config.env';
+import { CreateUserDto } from '../auth/dto';
+import { config } from '../common/config/config.env';
 import { randomBytes } from 'crypto';
 import * as argon from 'argon2';
-
+import { UserEntity } from '../common/entities/user.entity';
 
 @Injectable()
 export class PostgresService {
@@ -53,6 +53,23 @@ export class PostgresService {
     }
   }
 
+  async getUserByToken(token: string, email: string): Promise<UserEntity> {
+    const user_query = `SELECT * FROM users WHERE vertoken = $1 AND email = $2`;
+    const user_values = [token, email];
+    try {
+      const rows = await this.pool.query(user_query, user_values);
+
+      if (!rows.rows[0]) {
+        throw new NotFoundException('User not found');
+      }
+
+      return rows.rows[0];
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+
   async addUser(dto: CreateUserDto) {
     const password = await argon.hash(dto.password);
     const vertoken = randomBytes(3).toString('hex');
@@ -81,10 +98,10 @@ export class PostgresService {
     }
   }
 
-  async verifyUser(user_id: number) {
+  async verifyUser(user_id: number): Promise<UserEntity> {
     try {
       const query =
-        'UPDATE Users SET verified = $1, vertoken = undefined, verExp = undefined WHERE id = $2 RETURNING *';
+        'UPDATE Users SET verified = $1, vertoken = null, verExp = null, updated_at = NOW() WHERE id = $2 RETURNING *';
       const values = [true, user_id];
 
       const user = await this.pool.query(query, values);
@@ -104,7 +121,8 @@ export class PostgresService {
 
   async changePassword(user_id: string, new_password: string) {
     try {
-      const query = 'UPDATE Users SET password = $1 WHERE id = $2 RETURNING *';
+      const query =
+        'UPDATE Users SET password = $1, updated_at = NOW() WHERE id = $2 RETURNING *';
       const values = [new_password, user_id];
 
       const result = await this.pool.query(query, values);
@@ -122,7 +140,8 @@ export class PostgresService {
 
   async changeRole(user_id: number, new_role: string) {
     try {
-      const query = 'UPDATE Users SET role = $1 WHERE id = $2 RETURNING *';
+      const query =
+        'UPDATE Users SET role = $1, updated_at = NOW() WHERE id = $2 RETURNING *';
       const values = [new_role, user_id];
       const result = await this.pool.query(query, values);
 

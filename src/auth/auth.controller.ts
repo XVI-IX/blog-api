@@ -1,6 +1,6 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { Public } from 'src/common/decorators/public.decorator';
+import { Public } from '../common/decorators/public.decorator';
 import { CreateUserDto } from './dto';
 
 @Controller({
@@ -14,5 +14,12 @@ export class AuthController {
   @Public()
   register(@Body() dto: CreateUserDto) {
     return this.authService.register(dto);
+  }
+
+  @Post('/verify')
+  @Public()
+  @HttpCode(200)
+  verify(@Body() dto: { token: string; email: string }) {
+    return this.authService.verifyAccount(dto.token, dto.email);
   }
 }

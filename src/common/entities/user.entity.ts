@@ -1,6 +1,9 @@
 export interface UserEntity {
-  sub: number;
+  id: number;
   username: string;
   email: string;
-  roles: string[];
+  role: string;
+  verified: boolean;
+  verExp: Date;
+  vertoken: string;
 }
