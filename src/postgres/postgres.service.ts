@@ -166,7 +166,7 @@ export class PostgresService {
       const result = await this.pool.query(query, values);
 
       if (!result) {
-        throw new InternalServerErrorException('USer could not be deleted');
+        throw new InternalServerErrorException('User could not be deleted');
       }
 
       return true;
