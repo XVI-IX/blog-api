@@ -286,6 +286,34 @@ export class PostsService {
     }
   }
 
+  async getComments(post_id: number) {
+    try {
+      const comments = await this.pg.query(
+        'SELECT * FROM Comments WHERE post_id = $1',
+        [post_id],
+      );
+
+      console.log(comments);
+
+      if (!comments) {
+        throw new InternalServerErrorException('Post could not be retrieved');
+      }
+      if (comments[0].length === 0) {
+        throw new NotFoundException('Post comments could not be retrieved');
+      }
+
+      return {
+        message: 'comments retrieved',
+        status: 'success',
+        statusCode: 200,
+        data: comments,
+      };
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+
   async deletePost(user: Payload, post_id: number) {
     try {
       const post = await this.pg.query(

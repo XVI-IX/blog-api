@@ -88,6 +88,12 @@ export class PostsController {
     return this.postsService.commentPost(id, user, dto);
   }
 
+  @Get('/:id/comments')
+  @HttpCode(200)
+  getPostComments(@Param('id', ParseIntPipe) id: number) {
+    return this.postsService.getComments(id);
+  }
+
   @Delete('/:id')
   @HttpCode(200)
   deletePost(@User() user: Payload, @Param('id', ParseIntPipe) id: number) {
