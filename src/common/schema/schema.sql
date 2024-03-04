@@ -91,3 +91,53 @@ FOR EACH ROW
 
 ALTER TABLE Posts
 ADD COLUMN search_vector tsvector;
+
+-- CREATE OR REPLACE FUNCTION update_post_comments()
+-- RETURNS TRIGGER AS $$
+-- BEGIN
+--     UPDATE Posts
+--     SET comments = jsonb_agg(c)
+--     FROM (
+--         SELECT json_build_object(
+--             'id', c.id,
+--             'content', c.content,
+--             'user_id', c.user_id,
+--             'created_at', c.created_at,
+--             'updated_at', c.updated_at
+--         ) AS c
+--         FROM Comments c
+--         WHERE c.post_id = NEW.post_id
+--     ) AS sub
+--     WHERE Posts.id = NEW.post_id;
+--     RETURN NEW;
+-- END;
+-- $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION update_post_comments()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE Posts
+    SET comments = (
+        SELECT array_agg(comment)
+        FROM (
+            SELECT unnest(coalesce(Posts.comments, '{}'::jsonb[])) || jsonb_build_object(
+                'id', c.id,
+                'content', c.content,
+                'user_id', c.user_id,
+                'created_at', c.created_at,
+                'updated_at', c.updated_at
+            ) AS comment
+            FROM Comments c
+            WHERE c.post_id = NEW.post_id
+        ) AS sub
+    )
+    WHERE Posts.id = NEW.post_id;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE TRIGGER after_comment_insert
+AFTER INSERT ON Comments
+FOR EACH ROW
+EXECUTE FUNCTION update_post_comments();

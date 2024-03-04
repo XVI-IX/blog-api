@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PostgresService } from '../postgres/postgres.service';
-import { AddPostDto, UpdatePostDto } from './dto';
+import { AddPostDto, CommentDto, UpdatePostDto } from './dto';
 import { Payload } from '../common/entities/payload.entity';
 import { config } from '../common/config/config.env';
 
@@ -227,6 +227,58 @@ export class PostsService {
         status: 'success',
         statusCode: 200,
         link: `${config.API_LINK}/posts/${post_id}`,
+      };
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+
+  async likePost(post_id: number, user: Payload) {
+    try {
+      const query = `UPDATE Posts SET likes = likes + 1, liked_by = array_append(liked_by, $1) WHERE id = $2 RETURNING *`;
+      const values = [user.sub, post_id];
+
+      const liked = await this.pg.query(query, values);
+
+      if (!liked) {
+        throw new InternalServerErrorException('Post could not be liked.');
+      }
+
+      return {
+        message: 'Post liked.',
+        status: 'success',
+        statusCode: 200,
+        data: {
+          id: liked[0].id,
+          likes: liked[0].liked,
+          liked_by: liked[0].liked_by,
+        },
+      };
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+
+  async commentPost(post_id: number, user: Payload, dto: CommentDto) {
+    try {
+      const query = `
+      INSERT INTO Comments (content, user_id, post_id) VALUES ($1, $2, $3) RETURNING *
+      `;
+      const values = [dto.content, user.sub, post_id];
+
+      const comment = await this.pg.query(query, values);
+
+      if (!comment) {
+        throw new InternalServerErrorException('comment could not be posted');
+      }
+
+      return {
+        message: 'Comment posted',
+        status: 'success',
+        statusCode: 200,
+        data: comment[0],
       };
     } catch (error) {
       console.error(error);

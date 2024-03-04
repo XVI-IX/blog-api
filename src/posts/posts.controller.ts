@@ -13,7 +13,7 @@ import {
 import { PostsService } from './posts.service';
 import { User } from '../common/decorators/user.decorator';
 import { Payload } from '../common/entities/payload.entity';
-import { AddPostDto, UpdatePostDto } from './dto';
+import { AddPostDto, CommentDto, UpdatePostDto } from './dto';
 import { Public } from '../common/decorators/public.decorator';
 
 @Controller({
@@ -39,7 +39,7 @@ export class PostsController {
   @Public()
   @HttpCode(200)
   getAllPosts() {
-    return this.postsService.getAllPosts()
+    return this.postsService.getAllPosts();
   }
 
   @Get('/:id')
@@ -70,6 +70,22 @@ export class PostsController {
   @Public()
   share(@Param('id', ParseIntPipe) id: number) {
     return this.postsService.sharePost(id);
+  }
+
+  @Get('/:id/like')
+  @HttpCode(200)
+  likePost(@Param('id', ParseIntPipe) id: number, @User() user: Payload) {
+    return this.postsService.likePost(id, user);
+  }
+
+  @Post('/:id/comment')
+  @HttpCode(200)
+  commentPost(
+    @Param('id', ParseIntPipe) id: number,
+    @User() user: Payload,
+    @Body() dto: CommentDto,
+  ) {
+    return this.postsService.commentPost(id, user, dto);
   }
 
   @Delete('/:id')
