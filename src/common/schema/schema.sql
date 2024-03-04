@@ -88,3 +88,6 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER update_timestamp_trigger
 BEFORE UPDATE ON Users
 FOR EACH ROW
+
+ALTER TABLE Posts
+ADD COLUMN search_vector tsvector;

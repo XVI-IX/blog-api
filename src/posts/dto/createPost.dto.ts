@@ -11,5 +11,5 @@ export class AddPostDto {
 
   @IsNumber()
   @IsNotEmpty()
-  category_id: number;
+  category: string;
 }

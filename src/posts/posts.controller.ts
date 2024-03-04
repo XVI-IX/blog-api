@@ -1,5 +1,6 @@
 import {
   Controller,
+  Delete,
   HttpCode,
   Body,
   Post,
@@ -10,9 +11,10 @@ import {
   Put,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
-import { User } from 'src/common/decorators/user.decorator';
-import { Payload } from 'src/common/entities/payload.entity';
+import { User } from '../common/decorators/user.decorator';
+import { Payload } from '../common/entities/payload.entity';
 import { AddPostDto, UpdatePostDto } from './dto';
+import { Public } from '../common/decorators/public.decorator';
 
 @Controller({
   path: 'posts',
@@ -33,14 +35,23 @@ export class PostsController {
     return this.postsService.getUserPosts(user);
   }
 
+  @Get('/all')
+  @Public()
+  @HttpCode(200)
+  getAllPosts() {
+    return this.postsService.getAllPosts()
+  }
+
   @Get('/:id')
   @HttpCode(200)
+  @Public()
   getPostById(@Param('id', ParseIntPipe) id: number) {
     return this.postsService.getPostById(id);
   }
 
   @Get('/search')
   @HttpCode(200)
+  @Public()
   search(@Query('search') search: string) {
     return this.postsService.search(search);
   }
@@ -56,13 +67,14 @@ export class PostsController {
 
   @Get('/:id/share')
   @HttpCode(200)
+  @Public()
   share(@Param('id', ParseIntPipe) id: number) {
     return this.postsService.sharePost(id);
   }
 
   @Delete('/:id')
   @HttpCode(200)
-  deletePost(@Param('id', ParseIntPipe) id: number) {
-    return this.postsService.deletePost(id);
+  deletePost(@User() user: Payload, @Param('id', ParseIntPipe) id: number) {
+    return this.postsService.deletePost(user, id);
   }
 }

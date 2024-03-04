@@ -6,7 +6,7 @@ import {
 import { PostgresService } from '../postgres/postgres.service';
 import { AddPostDto, UpdatePostDto } from './dto';
 import { Payload } from '../common/entities/payload.entity';
-import { config } from 'src/common/config/config.env';
+import { config } from '../common/config/config.env';
 
 @Injectable()
 export class PostsService {
@@ -14,11 +14,28 @@ export class PostsService {
 
   async addPost(user: Payload, dto: AddPostDto) {
     try {
+      let category = await this.pg.query(
+        `SELECT * FROM categories WHERE name = $1`,
+        [dto.category],
+      );
+
+      if (category.length === 0) {
+        category = await this.pg.query(
+          `INSERT INTO Categories (name) VALUES ($1) RETURNING *`,
+          [dto.category],
+        );
+        if (!category) {
+          throw new InternalServerErrorException(
+            'New Category could not be created',
+          );
+        }
+      }
+
       const query = `
       INSERT INTO Posts (title, content, category_id, user_id)
       VALUES ($1, $2, $3, $4) RETURNING *
       `;
-      const values = [dto.title, dto.content, dto.category_id, user.sub];
+      const values = [dto.title, dto.content, category[0].id, user.sub];
 
       const post = await this.pg.query(query, values);
 
@@ -27,10 +44,10 @@ export class PostsService {
       }
 
       const userQuery = `
-      UPDATE Users SET posts = array_append(posts, $1)
+      UPDATE Users SET posts = array_append(Posts, $1)
       WHERE id = $2 RETURNING *
       `;
-      const userValue = [JSON.stringify(post.rows[0]), user.sub];
+      const userValue = [JSON.stringify(post[0]), user.sub];
 
       const userResult = await this.pg.query(userQuery, userValue);
 
@@ -43,8 +60,8 @@ export class PostsService {
         status: 'success',
         statusCode: 200,
         data: {
-          username: userResult.username,
-          posts: userResult.posts,
+          username: userResult[0].username,
+          posts: userResult[0].posts,
         },
       };
     } catch (error) {
@@ -102,7 +119,7 @@ export class PostsService {
         postId,
       ]);
 
-      if (post.rows.length === 0) {
+      if (post.length === 0) {
         throw new NotFoundException('Post could not be found');
       }
       if (!post) {
@@ -132,6 +149,8 @@ export class PostsService {
         [search],
       );
 
+      console.log(posts);
+
       if (!posts) {
         throw new InternalServerErrorException('Post could not be retrieved');
       }
@@ -153,11 +172,28 @@ export class PostsService {
 
   async updatePost(post_id: number, dto: UpdatePostDto) {
     try {
+      let category = await this.pg.query(
+        `SELECT * FROM categories WHERE name = $1`,
+        [dto.category],
+      );
+
+      if (category.length === 0) {
+        category = await this.pg.query(
+          `INSERT INTO Categories (name) VALUES ($1) RETURNING *`,
+          [dto.category],
+        );
+        if (!category) {
+          throw new InternalServerErrorException(
+            'New Category could not be created',
+          );
+        }
+      }
+
       const post = await this.pg.query(
         `UPDATE Posts SET 
-        title = $1, content = $1, updated_at = NOW()
-        WHERE id = $3`,
-        [dto.title, dto.content],
+        title = $1, content = $2, updated_at = NOW(), category_id = $3
+        WHERE id = $4 RETURNING *`,
+        [dto.title, dto.content, category[0].id, post_id],
       );
 
       if (!post) {
@@ -168,7 +204,7 @@ export class PostsService {
         message: 'Post updated',
         status: 'success',
         statusCode: 200,
-        data: post,
+        data: post[0],
       };
     } catch (error) {
       console.error(error);
@@ -190,7 +226,7 @@ export class PostsService {
         message: 'share link recieved',
         status: 'success',
         statusCode: 200,
-        link: `${config.API_LINK}/posts/${post.id}`,
+        link: `${config.API_LINK}/posts/${post_id}`,
       };
     } catch (error) {
       console.error(error);
