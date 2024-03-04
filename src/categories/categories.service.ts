@@ -31,7 +31,7 @@ export class CategoriesService {
   async addCategories(dto: CreateCategoryDto) {
     try {
       const category = await this.pg.query(
-        `INSERT INTO Categories (name) VALUES ($1)`,
+        `INSERT INTO Categories (name) VALUES ($1) RETURNING *`,
         [dto.name],
       );
 

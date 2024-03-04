@@ -12,6 +12,8 @@ import { UsersService } from './users.service';
 import { User } from '../common/decorators/user.decorator';
 import { Payload } from '../common/entities/payload.entity';
 import { UpdateUserDto } from './dto';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { Role } from 'src/common/enums/role.enum';
 
 @Controller({
   path: 'users',
@@ -27,6 +29,7 @@ export class UsersController {
   }
 
   @Get()
+  @Roles(Role.admin)
   @HttpCode(200)
   getAllUsers() {
     return this.usersService.getAllUsers();
@@ -49,7 +52,7 @@ export class UsersController {
 
   @Delete('/:id')
   @HttpCode(200)
-  deleteUser(@Param('id', ParseIntPipe) id: number) {
-    return this.usersService.deleteUser(id);
+  deleteUser(@Param('id', ParseIntPipe) id: number, @User() user: Payload) {
+    return this.usersService.deleteUser(id, user);
   }
 }

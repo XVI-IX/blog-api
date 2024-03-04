@@ -1,7 +1,11 @@
-import { Controller, Get, HttpCode } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Post } from '@nestjs/common';
 import { CategoriesService } from './categories.service';
+import { CreateCategoryDto } from './dto';
 
-@Controller('categories')
+@Controller({
+  path: 'categories',
+  version: '1',
+})
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
@@ -9,5 +13,11 @@ export class CategoriesController {
   @HttpCode(200)
   getCategories() {
     return this.categoriesService.getCategories();
+  }
+
+  @Post()
+  @HttpCode(200)
+  addCategory(@Body() dto: CreateCategoryDto) {
+    return this.categoriesService.addCategories(dto);
   }
 }
