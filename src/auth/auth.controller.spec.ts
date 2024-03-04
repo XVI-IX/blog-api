@@ -63,7 +63,7 @@ describe('AuthController', () => {
 
   it('should verify a user', () => {
     expect(
-      controller.verifyAccount({
+      controller.verify({
         token: '92929',
         email: 'testemail@example.com',
       }),

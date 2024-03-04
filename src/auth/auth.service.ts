@@ -10,8 +10,8 @@ import { apiResponse } from '../common/types';
 import { randomBytes } from 'crypto';
 import { PostgresService } from '../postgres/postgres.service';
 import * as moment from 'moment';
-import { Payload } from 'src/common/entities/payload.entity';
-import { config } from 'src/common/config/config.env';
+import { Payload } from '../common/entities/payload.entity';
+import { config } from '../common/config/config.env';
 
 @Injectable()
 export class AuthService {

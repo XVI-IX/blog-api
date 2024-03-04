@@ -9,8 +9,8 @@ import {
   Delete,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { User } from 'src/common/decorators/user.decorator';
-import { Payload } from 'src/common/entities/payload.entity';
+import { User } from '../common/decorators/user.decorator';
+import { Payload } from '../common/entities/payload.entity';
 import { UpdateUserDto } from './dto';
 
 @Controller({
